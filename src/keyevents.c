@@ -775,6 +775,9 @@ void feh_event_handle_generic(winwidget winwid, unsigned int state, KeySym keysy
 		 * on the head that the window was active on */
 		if (winwid->full_screen == TRUE && opt.xinerama && xinerama_screens) {
 			xinerama_screen = curr_screen;
+
+            // move it somewhere else first, otherwise the next line is ignored because its already at 0,0 on that screen
+            winwidget_move(winwid, -1, -1);
 			winwidget_move(winwid,
 					xinerama_screens[curr_screen].x_org, xinerama_screens[curr_screen].y_org);
 		}
