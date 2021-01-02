@@ -817,7 +817,7 @@ void feh_imlib_image_fill_text_bg(Imlib_Image im, int w, int h)
 	if (opt.text_bg == TEXT_BG_CLEAR)
 		gib_imlib_image_fill_rectangle(im, 0, 0, w, h, 0, 0, 0, 0);
 	else
-		gib_imlib_image_fill_rectangle(im, 0, 0, w, h, 0, 0, 0, 127);
+		gib_imlib_image_fill_rectangle(im, 0, 0, w, h, 255, 255, 255, 200);
 
 	imlib_context_set_blend(1);
 }
@@ -1206,6 +1206,86 @@ char *build_caption_filename(feh_file * file, short create_dir)
 	return caption_filename;
 }
 
+// creates image object, and does preliminary styling and determines offset for text
+Imlib_Image feh_create_caption_image_bubble(int tw, int th, int* xoff, int* yoff)
+{
+    Imlib_Image im = NULL; 
+    Imlib_Image bubble = NULL;   
+    *xoff = tw >> 1;
+    *yoff = th >> 1;
+    // double sized to allow for border
+    im = imlib_create_image(tw * 2, th * 2);
+    // supersample the bubble to quadrasize
+    bubble = imlib_create_image(tw * 4, th * 4);
+
+    if (!im || !bubble)
+        return NULL;
+
+    // fill im with alpha and set modes
+    gib_imlib_image_set_has_alpha(im, 1);
+    imlib_context_set_blend(0);
+    gib_imlib_image_fill_rectangle(im, 0, 0, tw * 2, th * 2, 0, 0, 0, 0);
+
+    // fill bubble with alpha and set modes
+    gib_imlib_image_set_has_alpha(bubble, 1);
+    imlib_context_set_blend(0);
+    gib_imlib_image_fill_rectangle(bubble, 0, 0, tw * 4, th * 4, 0, 0, 0, 0);
+
+    // create bubble polygon
+    ImlibPolygon poly = imlib_polygon_new();
+    gib_imlib_add_curve_to_polygon(poly, *xoff * 2, *yoff * 2, tw * 2, th >> 1, (*xoff + tw) * 2, *yoff * 2, 9);
+    gib_imlib_add_curve_to_polygon(poly, (*xoff + tw) * 2, *yoff * 2, tw * 1.75 * 2, th * 2, (*xoff + tw) * 2, (*yoff + th) * 2, 9);
+    gib_imlib_add_curve_to_polygon(poly, (*xoff + tw) * 2, (*yoff + th) * 2, tw * 2, th * 1.75 * 2, *xoff * 2, (*yoff + th) * 2, 9);
+    gib_imlib_add_curve_to_polygon(poly, *xoff * 2, (*yoff + th) * 2, tw >> 1, th * 2, *xoff * 2, *yoff * 2, 9);
+
+    // use the polygon to draw onto the bubble image
+    gib_imlib_image_fill_polygon(bubble, poly, 255, 255, 255, 200, 1, 0,0,0,0);
+    gib_imlib_image_draw_polygon(bubble, poly, 0, 0, 0, 255, 1, 1, 0,0,0,0);
+
+    // copy it slightly scaled onto the final caption im (avoid hideously failed 'anti aliasing')
+    imlib_context_set_image(im);
+    imlib_blend_image_onto_image(bubble, 1, 0, 0, tw * 4, th * 4, -3, -3, tw * 2 + 6, th * 2 + 6);
+
+    imlib_polygon_free(poly);
+    gib_imlib_free_image_and_decache(bubble);
+    return im;
+}
+
+Imlib_Image feh_create_caption_image_box(int tw, int th, int* xoff, int* yoff)
+{
+    // default caption
+    *xoff = *yoff = 10;    
+    Imlib_Image im = NULL;
+    im = imlib_create_image(tw + 20, th + 20);
+
+    // fill im with alpha and set modes
+    gib_imlib_image_set_has_alpha(im, 1);
+    imlib_context_set_blend(0);
+    gib_imlib_image_fill_rectangle(im, 0, 0, tw+20, th+20, 255, 255, 255, 200);
+    gib_imlib_image_draw_rectangle(im, 0, 0, tw+20, th+20, 0, 0, 0, 255);
+    return im;
+}
+
+// creates image object, and does preliminary styling and determines offset for text
+Imlib_Image feh_create_caption_image(int tw, int th, char* style, int* xoff, int* yoff)
+{
+    if(!strcmp(style, "bubble"))
+        return feh_create_caption_image_bubble(tw, th, xoff, yoff);
+    if(!strcmp(style, "box"))
+        return feh_create_caption_image_box(tw, th, xoff, yoff);
+
+    // default caption
+    *xoff = *yoff = 0;    
+    Imlib_Image im = NULL;
+    im = imlib_create_image(tw, th);
+
+    // fill im with alpha and set modes
+    gib_imlib_image_set_has_alpha(im, 1);
+    imlib_context_set_blend(0);
+    gib_imlib_image_fill_rectangle(im, 0, 0, tw, th, 255, 255, 255, 200);
+    return im;
+}
+
 void feh_draw_caption(winwidget w)
 {
 	static Imlib_Font fn = NULL;
@@ -1216,6 +1296,7 @@ void feh_draw_caption(winwidget w)
 	gib_list *lines, *l, *cc, *coords;
 	static gib_style *caption_style = NULL;
     char delim[2] = { ',', '\0' };
+    char* boxstyle = "normal";
 	feh_file *file;
 
 	if (!w->file) {
@@ -1255,8 +1336,10 @@ void feh_draw_caption(winwidget w)
 	caption_style = gib_style_new("caption");
 	caption_style->bits = gib_list_add_front(caption_style->bits,
 		gib_style_bit_new(0, 0, 0, 0, 0, 0));
+/*	caption_style->bits = gib_list_add_front(caption_style->bits,
+		gib_style_bit_new(1, 1, 255, 255, 255, 255));
 	caption_style->bits = gib_list_add_front(caption_style->bits,
-		gib_style_bit_new(1, 1, 0, 0, 0, 255));
+		gib_style_bit_new(-1, -1, 255, 255, 255, 255));*/
 
 	fn = feh_load_font(w);
 
@@ -1290,12 +1373,19 @@ void feh_draw_caption(winwidget w)
                     if(th)
                         break; /* found printable text already, and a new comment is begining, split to a new caption */
                     else {
+                        if(!strcmp("box", p + 1))
+                            boxstyle = "box";
+                        else if(!strcmp("bubble", p + 1))
+                            boxstyle = "bubble";
+                        else if(!strcmp("plain", p + 1))
+                            boxstyle = "plain";
                         l = l->next; /* no printable text found yet, continue skipping comments */
                         continue;
                     }
                 }
-            } else if (p[0] == '\0') {
-                l = l->next; /* skip empty lines */
+            /* skip empty lines, and lines in other languages */
+            } else if (p[0] == '\0' || (unsigned char)p[0] > (unsigned char)'~') {
+                l = l->next; 
                 continue;
             }
 		    gib_imlib_get_text_size(fn, p, caption_style, &ww, &hh, IMLIB_TEXT_TO_RIGHT);
@@ -1307,11 +1397,8 @@ void feh_draw_caption(winwidget w)
 		    l = l->next;
 	    }
 
-	    im = imlib_create_image(tw, th);
-	    if (!im)
-		    eprintf("Couldn't create image. Out of memory?");
-
-	    feh_imlib_image_fill_text_bg(im, tw, th);
+        int xoff, yoff;
+        im = feh_create_caption_image(tw, th, boxstyle, &xoff, &yoff);
 
 	    l = cc;
 	    while (l) {
@@ -1334,27 +1421,29 @@ void feh_draw_caption(winwidget w)
                         continue;
                     }
                 }
-            } else if (p[0] == '\0') {
-                l = l->next; /* skip empty lines */
+            /* skip empty lines, and lines in other languages */
+            } else if (p[0] == '\0' || (unsigned char)p[0] > (unsigned char)'~') {
+                l = l->next;
                 continue;
             }
 		    gib_imlib_get_text_size(fn, p, caption_style, &ww, &hh, IMLIB_TEXT_TO_RIGHT);
 		    x = (tw - ww) / 2;
 		    if (w->caption_entry && (*(file->caption) == '\0'))
-			    gib_imlib_text_draw(im, fn, caption_style, x, y, p,
+			    gib_imlib_text_draw(im, fn, caption_style, x + xoff, y + yoff, p,
 				    IMLIB_TEXT_TO_RIGHT, 255, 255, 127, 255);
 		    else if (w->caption_entry)
-			    gib_imlib_text_draw(im, fn, caption_style, x, y, p,
+			    gib_imlib_text_draw(im, fn, caption_style, x + xoff, y + yoff, p,
 				    IMLIB_TEXT_TO_RIGHT, 255, 255, 0, 255);
 		    else
-			    gib_imlib_text_draw(im, fn, caption_style, x, y, p,
-				    IMLIB_TEXT_TO_RIGHT, 255, 255, 255, 255);
+			    gib_imlib_text_draw(im, fn, caption_style, x + xoff, y + yoff, p,
+				    IMLIB_TEXT_TO_RIGHT, 0, 0, 0, 255);
 
 		    y += hh + 1;	/* line spacing */
 		    l = l->next;
 	    }
 
-	    gib_imlib_render_image_on_drawable(w->bg_pmap, im, ax ? ((ax * w->zoom - (tw / 2)) + w->im_x) : ((w->w - tw) / 2), ay ? (ay * w->zoom + w->im_y) : (w->h - th), 1, 1, 0);
+	    gib_imlib_render_image_on_drawable(w->bg_pmap, im, ax ? ((ax * w->zoom - (tw / 2 + xoff)) + w->im_x) : ((w->w - tw) / 2 - xoff),
+                                                           ay ? (ay * w->zoom + w->im_y) - yoff : (w->h - th) - yoff, 1, 1, 0);
 	    gib_imlib_free_image_and_decache(im);
 
     }
