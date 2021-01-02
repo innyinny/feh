@@ -474,7 +474,7 @@ void winwidget_render_image(winwidget winwid, int resize, int force_alias)
 				winwid->im_y = - opt.offset_y * winwid->zoom;
 			}
 		} else {
-			winwid->im_y = (int) (winwid->h - (winwid->im_h * winwid->zoom)) >> 1;
+			winwid->im_y = 0;/*(int) (winwid->h - (winwid->im_h * winwid->zoom)) >> 1;*/
 		}
 	}
 
