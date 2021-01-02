@@ -86,6 +86,7 @@ struct __winwidget {
 	enum win_type type;
 	unsigned char had_resize, full_screen;
 	Imlib_Image im;
+    Imlib_Image capped_im;
 	GC gc;
 	Pixmap bg_pmap;
 	Pixmap bg_pmap_cache;

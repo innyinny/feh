@@ -60,6 +60,7 @@ static winwidget winwidget_allocate(void)
 	ret->bg_pmap = 0;
 	ret->bg_pmap_cache = 0;
 	ret->im = NULL;
+    ret->capped_im = NULL;
 	ret->name = NULL;
 	ret->file = NULL;
 	ret->errstr = NULL;
@@ -101,6 +102,7 @@ winwidget winwidget_create_from_image(Imlib_Image im, char type)
 	ret->type = type;
 
 	ret->im = im;
+    ret->capped_im = NULL;
 	ret->w = ret->im_w = gib_imlib_image_get_width(ret->im);
 	ret->h = ret->im_h = gib_imlib_image_get_height(ret->im);
 
@@ -1017,6 +1019,9 @@ void winwidget_free_image(winwidget w)
 	if (w->im)
 		gib_imlib_free_image(w->im);
 	w->im = NULL;
+	if (w->capped_im)
+		gib_imlib_free_image(w->capped_im);
+	w->capped_im = NULL;
 	w->im_w = 0;
 	w->im_h = 0;
 	return;

@@ -606,7 +606,8 @@ void slideshow_save_image(winwidget win)
 	}
 
 	if (win->file) {
-		tmpname = feh_unique_filename(base_dir, FEH_FILE(win->file->data)->name);
+		//tmpname = feh_unique_filename(base_dir, FEH_FILE(win->file->data)->name);
+        tmpname = estrjoin("", base_dir, "./capped/", FEH_FILE(win->file->data)->name, NULL);
 	} else if (mode) {
 		char *tmp;
 		tmp = estrjoin(".", mode, "png", NULL);
@@ -623,7 +624,7 @@ void slideshow_save_image(winwidget win)
 	if (opt.verbose)
 		fprintf(stderr, "saving image to filename '%s'\n", tmpname);
 
-	gib_imlib_save_image_with_error_return(win->im, tmpname, &err);
+	gib_imlib_save_image_with_error_return(win->capped_im ? win->capped_im : win->im, tmpname, &err);
 
 	if (err)
 		feh_imlib_print_load_error(tmpname, win, err);

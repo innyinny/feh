@@ -1266,6 +1266,21 @@ Imlib_Image feh_create_caption_image_box(int tw, int th, int* xoff, int* yoff)
     return im;
 }
 
+
+Imlib_Image feh_create_caption_image_outline(int tw, int th, int* xoff, int* yoff)
+{
+    // default caption
+    *xoff = *yoff = 3;
+    Imlib_Image im = NULL;
+    im = imlib_create_image(tw + 6, th + 6);
+
+    // fill im with alpha and set modes
+    gib_imlib_image_set_has_alpha(im, 1);
+    imlib_context_set_blend(0);
+    gib_imlib_image_fill_rectangle(im, 0, 0, tw+6, th+6, 0, 0, 0, 0);
+    return im;
+}
+
 // creates image object, and does preliminary styling and determines offset for text
 Imlib_Image feh_create_caption_image(int tw, int th, char* style, int* xoff, int* yoff)
 {
@@ -1273,6 +1288,8 @@ Imlib_Image feh_create_caption_image(int tw, int th, char* style, int* xoff, int
         return feh_create_caption_image_bubble(tw, th, xoff, yoff);
     if(!strcmp(style, "box"))
         return feh_create_caption_image_box(tw, th, xoff, yoff);
+    if(!strcmp(style, "outline"))
+        return feh_create_caption_image_outline(tw, th, xoff, yoff);
 
     // default caption
     *xoff = *yoff = 0;    
@@ -1295,8 +1312,12 @@ void feh_draw_caption(winwidget w)
 	char *p;
 	gib_list *lines, *l, *cc, *coords;
 	static gib_style *caption_style = NULL;
+    static gib_style *outline_style = NULL;
     char delim[2] = { ',', '\0' };
     char* boxstyle = "normal";
+    char* color = "black";
+    int fg_r = 0, fg_b = 0, fg_g = 0;
+    
 	feh_file *file;
 
 	if (!w->file) {
@@ -1336,10 +1357,28 @@ void feh_draw_caption(winwidget w)
 	caption_style = gib_style_new("caption");
 	caption_style->bits = gib_list_add_front(caption_style->bits,
 		gib_style_bit_new(0, 0, 0, 0, 0, 0));
-/*	caption_style->bits = gib_list_add_front(caption_style->bits,
-		gib_style_bit_new(1, 1, 255, 255, 255, 255));
-	caption_style->bits = gib_list_add_front(caption_style->bits,
-		gib_style_bit_new(-1, -1, 255, 255, 255, 255));*/
+
+    // try to create the outline/stroke/glow effect using .. many many 'style bits'
+    outline_style = gib_style_new("outline");
+	outline_style->bits = gib_list_add_front(outline_style->bits,
+		gib_style_bit_new(0, 0, 0, 0, 0, 0));
+	outline_style->bits = gib_list_add_front(outline_style->bits,
+		gib_style_bit_new(2, 2, 255, 255, 255, 255));
+	outline_style->bits = gib_list_add_front(outline_style->bits,
+		gib_style_bit_new(-2, -2, 255, 255, 255, 255));
+	outline_style->bits = gib_list_add_front(outline_style->bits,
+		gib_style_bit_new(-2, 2, 255, 255, 255, 255));
+	outline_style->bits = gib_list_add_front(outline_style->bits,
+		gib_style_bit_new(2, -2, 255, 255, 255, 255));
+
+	outline_style->bits = gib_list_add_front(outline_style->bits,
+		gib_style_bit_new(0, 2, 255, 255, 255, 255));
+	outline_style->bits = gib_list_add_front(outline_style->bits,
+		gib_style_bit_new(0, -2, 255, 255, 255, 255));
+	outline_style->bits = gib_list_add_front(outline_style->bits,
+		gib_style_bit_new(-2, 0, 255, 255, 255, 255));
+	outline_style->bits = gib_list_add_front(outline_style->bits,
+		gib_style_bit_new(2, 0, 255, 255, 255, 255));
 
 	fn = feh_load_font(w);
 
@@ -1359,6 +1398,10 @@ void feh_draw_caption(winwidget w)
 	if (!lines)
 		return;
 
+    if(w->capped_im)
+        gib_imlib_free_image_and_decache(w->capped_im);
+    imlib_context_set_image(w->im);
+    w->capped_im = imlib_clone_image();
 	
 	l = lines;
     while (l) {
@@ -1379,6 +1422,18 @@ void feh_draw_caption(winwidget w)
                             boxstyle = "bubble";
                         else if(!strcmp("plain", p + 1))
                             boxstyle = "plain";
+                        else if(!strcmp("outline", p + 1))
+                            boxstyle = "outline";
+                        else if(!strcmp("red", p + 1))
+                            color = "red";
+                        else if(!strcmp("green", p + 1))
+                            color = "green";
+                        else if(!strcmp("blue", p + 1))
+                            color = "blue";
+                        else if(!strcmp("pink", p + 1))
+                            color = "pink";
+                        else if(!strcmp("black", p + 1))
+                            color = "black";
                         l = l->next; /* no printable text found yet, continue skipping comments */
                         continue;
                     }
@@ -1388,7 +1443,7 @@ void feh_draw_caption(winwidget w)
                 l = l->next; 
                 continue;
             }
-		    gib_imlib_get_text_size(fn, p, caption_style, &ww, &hh, IMLIB_TEXT_TO_RIGHT);
+		    gib_imlib_get_text_size(fn, p, strcmp("outline", boxstyle) ? caption_style : outline_style, &ww, &hh, IMLIB_TEXT_TO_RIGHT);
 		    if (ww > tw)
 			    tw = ww;
 		    th += hh;
@@ -1428,15 +1483,28 @@ void feh_draw_caption(winwidget w)
             }
 		    gib_imlib_get_text_size(fn, p, caption_style, &ww, &hh, IMLIB_TEXT_TO_RIGHT);
 		    x = (tw - ww) / 2;
-		    if (w->caption_entry && (*(file->caption) == '\0'))
-			    gib_imlib_text_draw(im, fn, caption_style, x + xoff, y + yoff, p,
-				    IMLIB_TEXT_TO_RIGHT, 255, 255, 127, 255);
-		    else if (w->caption_entry)
-			    gib_imlib_text_draw(im, fn, caption_style, x + xoff, y + yoff, p,
-				    IMLIB_TEXT_TO_RIGHT, 255, 255, 0, 255);
+		    if (w->caption_entry && (*(file->caption) == '\0')) {
+                fg_r = 255; fg_b = 255; fg_g = 127;
+            }
+		    else if (w->caption_entry) {
+                fg_r = 255; fg_b = 255; fg_g = 0;
+            }
+            else if(!strcmp("blue", color)) {
+                fg_r = 14; fg_b = 27; fg_g = 167;
+            }
+            else if(!strcmp("red", color)) {
+                fg_r = 142; fg_b = 9; fg_g = 66;
+            }
+            else if(!strcmp("green", color)) {
+                fg_r = 0; fg_b = 88; fg_g = 37;
+            }
+            else if(!strcmp("pink", color)) {
+                fg_r = 236; fg_b = 0; fg_g = 140; 
+            }
 		    else
-			    gib_imlib_text_draw(im, fn, caption_style, x + xoff, y + yoff, p,
-				    IMLIB_TEXT_TO_RIGHT, 0, 0, 0, 255);
+                fg_r = fg_b = fg_g = 0;
+		    gib_imlib_text_draw(im, fn, strcmp("outline", boxstyle) ? caption_style : outline_style, x + xoff, y + yoff, p,
+			    IMLIB_TEXT_TO_RIGHT, fg_r, fg_b, fg_g, 255);
 
 		    y += hh + 1;	/* line spacing */
 		    l = l->next;
@@ -1444,8 +1512,13 @@ void feh_draw_caption(winwidget w)
 
 	    gib_imlib_render_image_on_drawable(w->bg_pmap, im, ax ? ((ax * w->zoom - (tw / 2 + xoff)) + w->im_x) : ((w->w - tw) / 2 - xoff),
                                                            ay ? (ay * w->zoom + w->im_y) - yoff : (w->h - th) - yoff, 1, 1, 0);
-	    gib_imlib_free_image_and_decache(im);
-
+        imlib_context_set_image(w->capped_im);
+        imlib_blend_image_onto_image(im,0,0,0,
+            tw + xoff * 2, th + yoff * 2,
+            ax ? (ax - (tw / 2 + xoff)) : (w->im_w - tw) / 2 - xoff,
+            ay ? ay - yoff : (w->im_h - th) - yoff,
+            tw + xoff * 2, th + yoff * 2);
+        gib_imlib_free_image_and_decache(im);
     }
 	gib_list_free_and_data(lines);
 	return;
