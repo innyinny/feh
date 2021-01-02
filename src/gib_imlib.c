@@ -479,6 +479,16 @@ Imlib_Image gib_imlib_create_cropped_scaled_image(Imlib_Image im, int sx,
 }
 
 void
+gib_imlib_add_curve_to_polygon(ImlibPolygon poly, int x1, int y1, int x2, int y2, int x3, int y3, int steps)
+{
+   for(float t = (float)0.5/steps; t < 1; t += (float)1/steps) {
+      imlib_polygon_add_point(poly,
+         (1-t) * (1-t) * x1 + 2 * (1-t) * t * x2 + t * t * x3,
+         (1-t) * (1-t) * y1 + 2 * (1-t) * t * y2 + t * t * y3);
+   }
+}
+
+void
 gib_imlib_apply_color_modifier_to_rectangle(Imlib_Image im, int x, int y,
                                             int w, int h, DATA8 * rtab,
                                             DATA8 * gtab, DATA8 * btab,

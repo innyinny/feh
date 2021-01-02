@@ -141,6 +141,7 @@ void gib_imlib_blend_image_onto_image_with_rotation(Imlib_Image dest_image,
 Imlib_Image gib_imlib_create_cropped_scaled_image(Imlib_Image im, int sx,
                                                   int sy, int sw, int sh,
                                                   int dw, int dh, char alias);
+void gib_imlib_add_curve_to_polygon(ImlibPolygon poly, int x1, int y1, int x2, int y2, int x3, int y3, int steps);
 void gib_imlib_apply_color_modifier_to_rectangle(Imlib_Image im, int x, int y,
                                                  int w, int h, DATA8 * rtab,
                                                  DATA8 * gtab, DATA8 * btab,
