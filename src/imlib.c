@@ -843,6 +843,20 @@ static Imlib_Font feh_load_font(winwidget w)
 	return fn;
 }
 
+static Imlib_Font feh_load_new_font(char* font)
+{
+	static Imlib_Font fn = NULL;
+
+	if (font)
+		fn = gib_imlib_load_font(font);
+
+	if (!fn) {
+		eprintf("Couldn't load font to draw a message");
+	}
+
+	return fn;
+}
+
 
 void feh_draw_zoom(winwidget w)
 {
@@ -1434,6 +1448,9 @@ void feh_draw_caption(winwidget w)
                             color = "pink";
                         else if(!strcmp("black", p + 1))
                             color = "black";
+                        else if(!strncmp("font:", p + 1, 5))
+                            fn = feh_load_new_font(p + 6);
+
                         l = l->next; /* no printable text found yet, continue skipping comments */
                         continue;
                     }
