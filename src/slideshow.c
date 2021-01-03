@@ -607,7 +607,7 @@ void slideshow_save_image(winwidget win)
 
 	if (win->file) {
 		//tmpname = feh_unique_filename(base_dir, FEH_FILE(win->file->data)->name);
-        tmpname = estrjoin("", base_dir, "./capped/", FEH_FILE(win->file->data)->name, NULL);
+        tmpname = estrjoin("", base_dir, "./capped/", FEH_FILE(win->file->data)->name, ".png", NULL);
 	} else if (mode) {
 		char *tmp;
 		tmp = estrjoin(".", mode, "png", NULL);
