@@ -1253,7 +1253,7 @@ Imlib_Image feh_create_caption_image_bubble(int tw, int th, int* xoff, int* yoff
     gib_imlib_add_curve_to_polygon(poly, *xoff * 2, (*yoff + th) * 2, tw >> 1, th * 2, *xoff * 2, *yoff * 2, 9);
 
     // use the polygon to draw onto the bubble image
-    gib_imlib_image_fill_polygon(bubble, poly, 255, 255, 255, 200, 1, 0,0,0,0);
+    gib_imlib_image_fill_polygon(bubble, poly, 255, 255, 255, 240, 1, 0,0,0,0);
     gib_imlib_image_draw_polygon(bubble, poly, 0, 0, 0, 255, 1, 1, 0,0,0,0);
 
     // copy it slightly scaled onto the final caption im (avoid hideously failed 'anti aliasing')
@@ -1275,7 +1275,7 @@ Imlib_Image feh_create_caption_image_box(int tw, int th, int* xoff, int* yoff)
     // fill im with alpha and set modes
     gib_imlib_image_set_has_alpha(im, 1);
     imlib_context_set_blend(0);
-    gib_imlib_image_fill_rectangle(im, 0, 0, tw+20, th+20, 255, 255, 255, 200);
+    gib_imlib_image_fill_rectangle(im, 0, 0, tw+20, th+20, 255, 255, 255, 240);
     gib_imlib_image_draw_rectangle(im, 0, 0, tw+20, th+20, 0, 0, 0, 255);
     return im;
 }
@@ -1313,7 +1313,7 @@ Imlib_Image feh_create_caption_image(int tw, int th, char* style, int* xoff, int
     // fill im with alpha and set modes
     gib_imlib_image_set_has_alpha(im, 1);
     imlib_context_set_blend(0);
-    gib_imlib_image_fill_rectangle(im, 0, 0, tw, th, 255, 255, 255, 200);
+    gib_imlib_image_fill_rectangle(im, 0, 0, tw, th, 255, 255, 255, 240);
     return im;
 }
 
@@ -1504,7 +1504,7 @@ void feh_draw_caption(winwidget w)
                 fg_r = 255; fg_b = 255; fg_g = 127;
             }
 		    else if (w->caption_entry) {
-                fg_r = 255; fg_b = 255; fg_g = 0;
+                fg_r = 236; fg_b = 0; fg_g = 140; 
             }
             else if(!strcmp("blue", color)) {
                 fg_r = 14; fg_b = 27; fg_g = 167;
