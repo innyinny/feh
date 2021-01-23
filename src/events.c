@@ -323,7 +323,6 @@ static void feh_event_handle_ButtonRelease(XEvent * ev)
 	winwidget winwid = NULL;
 	unsigned int state = ev->xbutton.state & (ControlMask | ShiftMask | Mod1Mask | Mod4Mask);
 	unsigned int button = ev->xbutton.button;
-    char *coords;
 
 	if (menu_root) {
 		/* if menus are open, close them, and execute action if needed */
@@ -349,11 +348,47 @@ static void feh_event_handle_ButtonRelease(XEvent * ev)
 	}
 
     if (winwid->caption_entry) {
-        coords = emalloc(sizeof(char) * 32);
-        sprintf(coords, "\n#%d,%d\n", (int)((ev->xbutton.x - winwid->im_x) / winwid->zoom), (int)((ev->xbutton.y - winwid->im_y) / winwid->zoom));
-		ESTRAPPEND(FEH_FILE(winwid->file->data)->caption, coords);
-        free(coords);
-		winwidget_render_image_cached(winwid);
+        int clickx = (int)((ev->xbutton.x - winwid->im_x) / winwid->zoom);
+        int clicky = (int)((ev->xbutton.y - winwid->im_y) / winwid->zoom);
+        char* coords = emalloc(sizeof(char) * 32);
+        if(state & ShiftMask) {
+            sprintf(coords, "#%d,%d", clickx, clicky);
+
+            gib_list* list = gib_string_split(FEH_FILE(winwid->file->data)->caption, "\n");
+            int ax, ay, adist, distance = 10000000;
+            char* p = NULL;
+	        gib_list *i, *closest = NULL, *acoords = NULL, *next = NULL;
+
+	        for (i=list; i; i=next) {
+		        next=i->next;
+                p = (char*) i->data;
+                if(p[0] == '#' && strstr(p + 1, ",")) {
+                    acoords = gib_string_split(p + 1, ",");
+                    if(acoords && acoords->data && acoords->next && acoords->next->data) {
+                        ax = atoi(acoords->data);
+                        ay = atoi(acoords->next->data);
+                        adist = abs(clickx - ax) + abs(clicky - ay);
+                        if(adist < distance) {
+                            distance = adist;
+                            closest = i;
+                        }
+                    }
+                    gib_list_free_and_data(acoords);
+                }
+            }
+            if(closest) {
+                free(closest->data);
+                closest->data = coords;
+                free(FEH_FILE(winwid->file->data)->caption);
+                FEH_FILE(winwid->file->data)->caption = gib_strjoin(list, "\n");
+            }
+        }
+        else {
+		    sprintf(coords, "\n#%d,%d\n", clickx, clicky);
+            ESTRAPPEND(FEH_FILE(winwid->file->data)->caption, coords);
+            free(coords);
+        }
+	    winwidget_render_image_cached(winwid);
         return;
     }
 

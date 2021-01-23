@@ -93,9 +93,7 @@ gib_list *gib_list_find_by_data(gib_list *root, void *data);
 
 /* don't really belong here, will do for now */
 gib_list *gib_string_split(const char *string, const char *delimiter);
-/*
-char *gib_strjoin(const char *separator, ...);
-*/
+char* gib_strjoin(gib_list* list, const char* separator);
 
 #ifdef __cplusplus
 }

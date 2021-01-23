@@ -577,3 +577,30 @@ gib_string_split(const char *string, const char *delimiter)
 
    return string_list;
 }
+
+char *
+gib_strjoin(gib_list *root, const char *separator)
+{
+    if (!root || !separator)
+        return NULL;
+
+    unsigned int separator_len = strlen(separator);
+    unsigned int len = 2;
+
+	gib_list *i, *next = NULL;
+	for (i=root; i; i=next) {
+		next=i->next;
+        len += strlen(i->data) + separator_len;
+	}
+    char *string = emalloc(sizeof(char) * len);
+    string[0] = 0;
+
+	for (i=root; i; i=next) {
+		next=i->next;
+        strcat(string, (char*) i->data);
+        if(next)
+            strcat(string, separator);
+	}
+    return string;
+}
+
