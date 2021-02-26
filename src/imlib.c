@@ -1189,7 +1189,7 @@ void feh_draw_info(winwidget w)
 char *build_caption_filename(feh_file * file, short create_dir)
 {
 	char *caption_filename;
-	char *s, *dir, *caption_dir;
+	char *s, *dir, *caption_dir, *basename;
 	struct stat cdir_stat;
 	s = strrchr(file->filename, '/');
 	if (s) {
@@ -1199,24 +1199,58 @@ char *build_caption_filename(feh_file * file, short create_dir)
 	} else {
 		dir = estrdup(".");
 	}
+    // make a base filename for changing extension to txt
+	basename = estrdup(file->filename);
+	s = strrchr(basename, '.');
+    if(s) 
+        *s = '\0';
 
-	caption_dir = estrjoin("/", dir, opt.caption_path, NULL);
+    // check a variety of smart paths before default behavior
+    // "./cappath/basename.txt'
+    caption_filename = estrjoin("", dir, "/", opt.caption_path, "/", basename, ".txt", NULL);
+    if (stat(caption_filename, &cdir_stat) == -1) {
+        free(caption_filename);
 
-	D(("dir %s, cp %s, cdir %s\n", dir, opt.caption_path, caption_dir))
+        // "./cappath/filename.ext.txt'
+        caption_filename = estrjoin("", dir, "/", opt.caption_path, "/", file->name, ".txt", NULL);
+    }
+    if (stat(caption_filename, &cdir_stat) == -1) {
+        free(caption_filename);
 
-	if (stat(caption_dir, &cdir_stat) == -1) {
-		if (!create_dir)
-			return NULL;
-		if (mkdir(caption_dir, 0755) == -1)
-			eprintf("Failed to create caption directory %s:", caption_dir);
-	} else if (!S_ISDIR(cdir_stat.st_mode))
-		eprintf("Caption directory (%s) exists, but is not a directory.",
-			caption_dir);
+        // "./basename.txt'
+        caption_filename = estrjoin("", dir, "/", basename, ".txt", NULL);
+    }
+    if (stat(caption_filename, &cdir_stat) == -1) {
+        free(caption_filename);
 
-	free(caption_dir);
+        // "./filename.ext.txt'
+        caption_filename = estrjoin("", dir, "/", file->name, ".txt", NULL);
+    }
 
-	caption_filename = estrjoin("", dir, "/", opt.caption_path, "/", file->name, ".txt", NULL);
+    if (stat(caption_filename, &cdir_stat) == -1) {
+        free(caption_filename);
+
+        // all the 'smart' paths have been tried, resort to default location
+
+	    caption_dir = estrjoin("/", dir, opt.caption_path, NULL);
+
+	    D(("dir %s, cp %s, cdir %s\n", dir, opt.caption_path, caption_dir))
+
+	    if (stat(caption_dir, &cdir_stat) == -1) {
+		    if (!create_dir)
+			    return NULL;
+		    if (mkdir(caption_dir, 0755) == -1)
+			    eprintf("Failed to create caption directory %s:", caption_dir);
+	    } else if (!S_ISDIR(cdir_stat.st_mode))
+		    eprintf("Caption directory (%s) exists, but is not a directory.",
+			    caption_dir);
+
+	    free(caption_dir);
+
+	    caption_filename = estrjoin("", dir, "/", opt.caption_path, "/", basename, ".txt", NULL);
+    }
 	free(dir);
+    free(basename);
 	return caption_filename;
 }
 

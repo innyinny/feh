@@ -412,6 +412,15 @@ char *feh_printf(char *str, feh_file * file, winwidget winwid)
 				   strncat(ret, "playing", sizeof(ret) - strlen(ret) - 1);
 				}
 				break;
+			case 'c':
+				if (file) {
+                    char *caption_filename;
+		            caption_filename = build_caption_filename(file, 1);
+                    if (caption_filename)
+					    strncat(ret, caption_filename, sizeof(ret) - strlen(ret) - 1);
+                    free(caption_filename);
+                }
+				break;
 			case 'f':
 				if (file)
 					strncat(ret, file->filename, sizeof(ret) - strlen(ret) - 1);
