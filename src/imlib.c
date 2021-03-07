@@ -364,6 +364,8 @@ void feh_reload_image(winwidget w, int resize, int force_new)
 
 	old_w = gib_imlib_image_get_width(w->im);
 	old_h = gib_imlib_image_get_height(w->im);
+	w->old_x = w->im_x;
+	w->old_y = w->im_y;
 
 	/*
 	 * If we don't free the old image before loading the new one, Imlib2's

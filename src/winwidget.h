@@ -104,6 +104,10 @@ struct __winwidget {
 	int im_x;
 	int im_y;
 
+    /* previous offsets to restore on seemless reload */
+    int old_x;
+    int old_y;
+
 	/* From 0 (not visible) to 1.00 (actual size)
 	 * all the way up to INT_MAX (eww)
 	 */
@@ -120,6 +124,7 @@ struct __winwidget {
 
 #ifdef HAVE_INOTIFY
 	int inotify_wd;
+	int inotify_capd;
 #endif
 };
 

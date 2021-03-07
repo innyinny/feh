@@ -86,6 +86,7 @@ static winwidget winwidget_allocate(void)
 
 #ifdef HAVE_INOTIFY
     ret->inotify_wd = -1;
+    ret->inotify_capd = -1;
 #endif
 
 	return(ret);
@@ -482,6 +483,16 @@ void winwidget_render_image(winwidget winwid, int resize, int force_alias)
 
 	winwid->had_resize = 0;
 
+    if(winwid->old_y) {
+        winwid->im_y = winwid->old_y;
+        winwid->old_y = 0;
+    }
+
+    if(winwid->old_x) {
+        winwid->im_x = winwid->old_x;
+        winwid->old_x = 0;
+    }
+
 	if (opt.keep_zoom_vp)
 		winwidget_sanitise_offsets(winwid);
 
@@ -699,6 +710,12 @@ void winwidget_inotify_remove(winwidget winwid)
             weprintf("inotify_rm_watch failed:");
         winwid->inotify_wd = -1;
     }
+    if (winwid->inotify_capd >= 0) {
+        D(("Removing inotify watch for captions\n"));
+        if (inotify_rm_watch(opt.inotify_fd, winwid->inotify_capd))
+            weprintf("inotify_rm_watch failed:");
+        winwid->inotify_capd = -1;
+    }
 }
 #endif
 
@@ -721,6 +738,23 @@ void winwidget_inotify_add(winwidget winwid, feh_file * file)
         winwid->inotify_wd = inotify_add_watch(opt.inotify_fd, dir, IN_CLOSE_WRITE | IN_MOVED_TO);
         if (winwid->inotify_wd < 0)
             weprintf("inotify_add_watch failed:");
+
+
+        /* watch for caption file change */
+        char *caption_filepath, *s;
+		caption_filepath = build_caption_filename(file, 0);
+		if (caption_filepath) {
+	        s = strrchr(caption_filepath, '/');
+	        if (s)
+		        *s = '\0';
+            // if its a different directory, watch it
+            if( strcmp(caption_filepath, dir) != 0) {
+                winwid->inotify_capd = inotify_add_watch(opt.inotify_fd, caption_filepath, IN_CLOSE_WRITE | IN_MOVED_TO);
+                if (winwid->inotify_capd < 0)
+                    weprintf("inotify_add_watch failed:");
+            }
+            free(caption_filepath);
+        }
     }
 }
 #endif
@@ -731,6 +765,7 @@ void feh_event_handle_inotify(void)
 {
     D(("Received inotify events\n"));
     char buf[INOTIFY_BUFFER_LEN];
+    char *s = NULL;
     int i = 0;
     int len = read (opt.inotify_fd, buf, INOTIFY_BUFFER_LEN);
     if (len < 0) {
@@ -742,14 +777,17 @@ void feh_event_handle_inotify(void)
         struct inotify_event *event;
         event = (struct inotify_event *) &buf[i];
         for (int j = 0; j < window_num; j++) {
-            if(windows[j]->inotify_wd == event->wd) {
+            if(windows[j]->inotify_wd == event->wd || windows[j]->inotify_capd == event->wd) {
                 if (event->mask & IN_IGNORED) {
                     D(("inotify watch was implicitely removed\n"));
                     windows[j]->inotify_wd = -1;
                 } else if (event->mask & (IN_CLOSE_WRITE | IN_MOVED_TO)) {
-                    if (strcmp(event->name, FEH_FILE(windows[j]->file->data)->name) == 0) {
-                        D(("inotify says file changed\n"));
-                        feh_reload_image(windows[j], 0, 0);
+                    D(("inotify says file changed: %s cmp %s\n", event->name, FEH_FILE(windows[j]->file->data)->name));
+                    s = strchr(event->name, '.');
+                    if(s) {
+                        if (strncmp(event->name, FEH_FILE(windows[j]->file->data)->name, s - event->name) == 0) {
+                            feh_reload_image(windows[j], 0, 0);
+                        }
                     }
                 }
                 break;
