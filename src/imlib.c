@@ -1311,8 +1311,9 @@ Imlib_Image feh_create_caption_image_box(int tw, int th, int* xoff, int* yoff)
     // fill im with alpha and set modes
     gib_imlib_image_set_has_alpha(im, 1);
     imlib_context_set_blend(0);
-    gib_imlib_image_fill_rectangle(im, 0, 0, tw+20, th+20, 255, 255, 255, 240);
+    gib_imlib_image_fill_rectangle(im, 0, 0, tw+20, th+20, 255, 255, 255, 255);
     gib_imlib_image_draw_rectangle(im, 0, 0, tw+20, th+20, 0, 0, 0, 255);
+    gib_imlib_image_draw_rectangle(im, 1, 1, tw+18, th+18, 0, 0, 0, 255);
     return im;
 }
 
@@ -1349,7 +1350,7 @@ Imlib_Image feh_create_caption_image(int tw, int th, char* style, int* xoff, int
     // fill im with alpha and set modes
     gib_imlib_image_set_has_alpha(im, 1);
     imlib_context_set_blend(0);
-    gib_imlib_image_fill_rectangle(im, 0, 0, tw, th, 255, 255, 255, 240);
+    gib_imlib_image_fill_rectangle(im, 0, 0, tw, th, 255, 255, 255, 255);
     return im;
 }
 
@@ -1484,6 +1485,8 @@ void feh_draw_caption(winwidget w)
                             color = "pink";
                         else if(!strcmp("black", p + 1))
                             color = "black";
+                        else if(!strcmp("white", p + 1))
+                            color = "white";
                         else if(!strncmp("font:", p + 1, 5))
                             fn = feh_load_new_font(p + 6);
 
@@ -1553,6 +1556,9 @@ void feh_draw_caption(winwidget w)
             }
             else if(!strcmp("pink", color)) {
                 fg_r = 236; fg_b = 0; fg_g = 140; 
+            }
+            else if(!strcmp("white", color)) {
+                fg_r = 255; fg_b = 255; fg_g = 255; 
             }
 		    else
                 fg_r = fg_b = fg_g = 0;
