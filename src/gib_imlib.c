@@ -349,6 +349,8 @@ gib_imlib_text_draw(Imlib_Image im, Imlib_Font fn, gib_style * s, int x,
          {
             if ((bb->r + bb->g + bb->b + bb->a) == 0)
                imlib_context_set_color(r, g, b, a);
+            else if (bb->r == r && bb->g == g && bb->a == a)
+               imlib_context_set_color(0, 0, 0, a);
             else
                imlib_context_set_color(bb->r, bb->g, bb->b, bb->a);
             imlib_text_draw(x + bb->x_offset, y + bb->y_offset, text);
