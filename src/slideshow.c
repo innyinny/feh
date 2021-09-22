@@ -457,6 +457,17 @@ char *feh_printf(char *str, feh_file * file, winwidget winwid)
 			case 'm':
 				strncat(ret, mode, sizeof(ret) - strlen(ret) - 1);
 				break;
+			case 'M':
+				if (winwid) {
+					gib_list* closest = feh_get_closest(winwid, winwid->move_offset_x, winwid->move_offset_y);
+					if(closest) {
+						strncat(ret, &closest->data[1], sizeof(ret) - strlen(ret) - 1);
+					}
+					else {
+						strncat(ret, "''", sizeof(ret) - strlen(ret) - 1);
+					}
+				}
+				break;
 			case 'n':
 				if (file)
 					strncat(ret, file->name, sizeof(ret) - strlen(ret) - 1);
