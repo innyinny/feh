@@ -318,6 +318,33 @@ static void feh_event_handle_ButtonPress(XEvent * ev)
 	return;
 }
 
+gib_list* feh_get_closest(winwidget winwid, int clickx, int clicky)
+{
+    gib_list* list = gib_string_split(FEH_FILE(winwid->file->data)->caption, "\n");
+    int ax, ay, adist, distance = 10000000;
+    char* p = NULL;
+    gib_list *i, *closest = NULL, *acoords = NULL, *next = NULL;
+
+    for (i=list; i; i=next) {
+        next=i->next;
+        p = (char*) i->data;
+        if(p[0] == '#' && strstr(p + 1, ",")) {
+            acoords = gib_string_split(p + 1, ",");
+            if(acoords && acoords->data && acoords->next && acoords->next->data) {
+                ax = atoi(acoords->data);
+                ay = atoi(acoords->next->data);
+                adist = abs(clickx - ax) + abs(clicky - ay);
+                if(adist < distance) {
+                    distance = adist;
+                    closest = i;
+                }
+            }
+            gib_list_free_and_data(acoords);
+        }
+    }
+    return closest;
+}
+
 static void feh_event_handle_ButtonRelease(XEvent * ev)
 {
 	winwidget winwid = NULL;
@@ -353,34 +380,13 @@ static void feh_event_handle_ButtonRelease(XEvent * ev)
         char* coords = emalloc(sizeof(char) * 32);
         if(state & ShiftMask) {
             sprintf(coords, "#%d,%d", clickx, clicky);
+            gib_list* closest = feh_get_closest(winwid, clickx, clicky);
 
-            gib_list* list = gib_string_split(FEH_FILE(winwid->file->data)->caption, "\n");
-            int ax, ay, adist, distance = 10000000;
-            char* p = NULL;
-	        gib_list *i, *closest = NULL, *acoords = NULL, *next = NULL;
-
-	        for (i=list; i; i=next) {
-		        next=i->next;
-                p = (char*) i->data;
-                if(p[0] == '#' && strstr(p + 1, ",")) {
-                    acoords = gib_string_split(p + 1, ",");
-                    if(acoords && acoords->data && acoords->next && acoords->next->data) {
-                        ax = atoi(acoords->data);
-                        ay = atoi(acoords->next->data);
-                        adist = abs(clickx - ax) + abs(clicky - ay);
-                        if(adist < distance) {
-                            distance = adist;
-                            closest = i;
-                        }
-                    }
-                    gib_list_free_and_data(acoords);
-                }
-            }
             if(closest) {
                 free(closest->data);
                 closest->data = coords;
                 free(FEH_FILE(winwid->file->data)->caption);
-                FEH_FILE(winwid->file->data)->caption = gib_strjoin(list, "\n");
+                FEH_FILE(winwid->file->data)->caption = gib_strjoin(gib_list_first(closest), "\n");
             }
         }
         else {
@@ -511,6 +517,10 @@ static void feh_event_handle_MotionNotify(XEvent * ev)
 	int dx, dy;
 	int scr_width, scr_height;
 
+	winwid = winwidget_get_from_window(ev->xmotion.window);
+	winwid->move_offset_x = (int)((ev->xbutton.x - winwid->im_x) / winwid->zoom);
+	winwid->move_offset_y = (int)((ev->xbutton.y - winwid->im_y) / winwid->zoom);
+
 	scr_width = scr->width;
 	scr_height = scr->height;
 #ifdef HAVE_LIBXINERAMA
@@ -581,7 +591,7 @@ static void feh_event_handle_MotionNotify(XEvent * ev)
 	} else if (opt.mode == MODE_ZOOM) {
 		while (XCheckTypedWindowEvent(disp, ev->xmotion.window, MotionNotify, ev));
 
-		winwid = winwidget_get_from_window(ev->xmotion.window);
+		//winwid = winwidget_get_from_window(ev->xmotion.window);
 		if (winwid) {
 			if (ev->xmotion.x > winwid->click_offset_x)
 				winwid->zoom = winwid->old_zoom + (
@@ -609,7 +619,7 @@ static void feh_event_handle_MotionNotify(XEvent * ev)
 		int orig_x, orig_y;
 
 		while (XCheckTypedWindowEvent(disp, ev->xmotion.window, MotionNotify, ev));
-		winwid = winwidget_get_from_window(ev->xmotion.window);
+		//winwid = winwidget_get_from_window(ev->xmotion.window);
 		if (winwid) {
 			if (opt.mode == MODE_NEXT) {
 				if ((abs(winwid->click_offset_x - (ev->xmotion.x - winwid->im_x)) > FEH_JITTER_OFFSET)
@@ -674,7 +684,7 @@ static void feh_event_handle_MotionNotify(XEvent * ev)
 		}
 	} else if (opt.mode == MODE_ROTATE) {
 		while (XCheckTypedWindowEvent(disp, ev->xmotion.window, MotionNotify, ev));
-		winwid = winwidget_get_from_window(ev->xmotion.window);
+		//winwid = winwidget_get_from_window(ev->xmotion.window);
 		if (winwid) {
 			D(("Rotating\n"));
 			if (!winwid->has_rotated) {
@@ -696,7 +706,7 @@ static void feh_event_handle_MotionNotify(XEvent * ev)
 		}
 	} else if (opt.mode == MODE_BLUR) {
 		while (XCheckTypedWindowEvent(disp, ev->xmotion.window, MotionNotify, ev));
-		winwid = winwidget_get_from_window(ev->xmotion.window);
+		//winwid = winwidget_get_from_window(ev->xmotion.window);
 		if (winwid) {
 			Imlib_Image temp, ptr;
 			signed int blur_radius;
@@ -720,7 +730,7 @@ static void feh_event_handle_MotionNotify(XEvent * ev)
 		}
 	} else {
 		while (XCheckTypedWindowEvent(disp, ev->xmotion.window, MotionNotify, ev));
-		winwid = winwidget_get_from_window(ev->xmotion.window);
+		//winwid = winwidget_get_from_window(ev->xmotion.window);
 		if ((winwid != NULL) && (winwid->type == WIN_TYPE_THUMBNAIL)) {
 			feh_thumbnail *thumbnail;
 			int x, y;

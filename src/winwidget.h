@@ -116,6 +116,10 @@ struct __winwidget {
 
 	int click_offset_x;
 	int click_offset_y;
+
+	int move_offset_x;
+	int move_offset_y;
+
 	int im_click_offset_x;
 	int im_click_offset_y;
 	time_t click_start_time;
