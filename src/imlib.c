@@ -1339,7 +1339,7 @@ Imlib_Image feh_create_caption_image(int tw, int th, char* style, int* xoff, int
         return feh_create_caption_image_bubble(tw, th, xoff, yoff);
     if(!strcmp(style, "box"))
         return feh_create_caption_image_box(tw, th, xoff, yoff);
-    if(!strcmp(style, "outline"))
+    if(!strcmp(style, "outline") || !strcmp(style, "plain"))
         return feh_create_caption_image_outline(tw, th, xoff, yoff);
 
     // default caption
@@ -1499,7 +1499,7 @@ void feh_draw_caption(winwidget w)
                 l = l->next; 
                 continue;
             }
-		    gib_imlib_get_text_size(fn, p, strcmp("outline", boxstyle) ? caption_style : outline_style, &ww, &hh, IMLIB_TEXT_TO_RIGHT);
+		    gib_imlib_get_text_size(fn, p, strcmp("outline", boxstyle) ? (strcmp("plain", boxstyle) ? caption_style : NULL) : outline_style, &ww, &hh, IMLIB_TEXT_TO_RIGHT);
 		    if (ww > tw)
 			    tw = ww;
 		    th += hh;
@@ -1562,7 +1562,7 @@ void feh_draw_caption(winwidget w)
             }
 		    else
                 fg_r = fg_b = fg_g = 0;
-		    gib_imlib_text_draw(im, fn, strcmp("outline", boxstyle) ? caption_style : outline_style, x + xoff, y + yoff, p,
+		    gib_imlib_text_draw(im, fn, strcmp("outline", boxstyle) ? (strcmp("plain", boxstyle) ? caption_style : NULL) : outline_style, x + xoff, y + yoff, p,
 			    IMLIB_TEXT_TO_RIGHT, fg_r, fg_b, fg_g, 255);
 
 		    y += hh + 1;	/* line spacing */
