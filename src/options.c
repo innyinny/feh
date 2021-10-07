@@ -433,6 +433,18 @@ static void feh_parse_option_array(int argc, char **argv, int finalrun)
 #endif
 		{"class"         , 1, 0, 249},
 		{"no-conversion-cache", 0, 0, 250},
+		{"actionf1"      , 1, 0, 251},
+		{"actionf2"      , 1, 0, 252},
+		{"actionf3"      , 1, 0, 253},
+		{"actionf4"      , 1, 0, 254},
+		{"actionf5"      , 1, 0, 255},
+		{"actionf6"      , 1, 0, 256},
+		{"actionf7"      , 1, 0, 257},
+		{"actionf8"      , 1, 0, 258},
+		{"actionf9"      , 1, 0, 259},
+		{"actionf10"     , 1, 0, 260},
+		{"actionf11"     , 1, 0, 261},
+		{"actionf12"     , 1, 0, 262},
 		{0, 0, 0, 0}
 	};
 	int optch = 0, cmdx = 0;
@@ -711,31 +723,29 @@ static void feh_parse_option_array(int argc, char **argv, int finalrun)
 			opt.conversion_timeout = atoi(optarg);
 			break;
 		case 209:
-			opt.actions[1] = estrdup(optarg);
-			break;
 		case 210:
-			opt.actions[2] = estrdup(optarg);
-			break;
 		case 211:
-			opt.actions[3] = estrdup(optarg);
-			break;
 		case 212:
-			opt.actions[4] = estrdup(optarg);
-			break;
 		case 213:
-			opt.actions[5] = estrdup(optarg);
-			break;
 		case 214:
-			opt.actions[6] = estrdup(optarg);
-			break;
 		case 215:
-			opt.actions[7] = estrdup(optarg);
-			break;
 		case 216:
-			opt.actions[8] = estrdup(optarg);
-			break;
 		case 217:
-			opt.actions[9] = estrdup(optarg);
+			opt.actions[optch-208] = estrdup(optarg);
+			break;
+		case 251:
+		case 252:
+		case 253:
+		case 254:
+		case 255:
+		case 256:
+		case 257:
+		case 258:
+		case 259:
+		case 260:
+		case 261:
+		case 262:
+			opt.actions[optch-240] = estrdup(optarg);
 			break;
 		case 218:
 			opt.bgmode = BG_MODE_FILL;
@@ -883,7 +893,7 @@ static void check_options(void)
 	int i;
 	char *endptr;
 
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 24; i++) {
 		if (opt.actions[i] && !opt.hold_actions[i] && (opt.actions[i][0] == ';')) {
 			opt.hold_actions[i] = 1;
 			opt.actions[i] = opt.actions[i] + 1;

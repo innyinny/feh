@@ -79,7 +79,7 @@ struct __fehoptions {
 	unsigned char draw_info;
 	unsigned char cache_thumbnails;
 	unsigned char on_last_slide;
-	unsigned char hold_actions[10];
+	unsigned char hold_actions[24];
 	unsigned char text_bg;
 	unsigned char no_fehbg;
 	unsigned char keep_zoom_vp;
@@ -95,8 +95,8 @@ struct __fehoptions {
 	char *title_font;
 	char *title;
 	char *thumb_title;
-	char *actions[10];
-	char *action_titles[10];
+	char *actions[24];
+	char *action_titles[24];
 	char *fontpath;
 	char *filelistfile;
 	char *menu_font;
@@ -195,6 +195,18 @@ enum key_action {
 	EVENT_action_7,
 	EVENT_action_8,
 	EVENT_action_9,
+	EVENT_action_f1,
+	EVENT_action_f2,
+	EVENT_action_f3,
+	EVENT_action_f4,
+	EVENT_action_f5,
+	EVENT_action_f6,
+	EVENT_action_f7,
+	EVENT_action_f8,
+	EVENT_action_f9,
+	EVENT_action_f10,
+	EVENT_action_f11,
+	EVENT_action_f12,
 	EVENT_zoom_in,
 	EVENT_zoom_out,
 	EVENT_zoom_default,

@@ -176,6 +176,18 @@ void init_keyevents(void) {
 	feh_set_kb("action_7"  , 0, XK_7         , 0, XK_KP_7      , 0, 0);
 	feh_set_kb("action_8"  , 0, XK_8         , 0, XK_KP_8      , 0, 0);
 	feh_set_kb("action_9"  , 0, XK_9         , 0, XK_KP_9      , 0, 0);
+	feh_set_kb("action_f1" , 0, XK_F1        , 0, 0            , 0, 0);
+	feh_set_kb("action_f2" , 0, XK_F2        , 0, 0            , 0, 0);
+	feh_set_kb("action_f3" , 0, XK_F3        , 0, 0            , 0, 0);
+	feh_set_kb("action_f4" , 0, XK_F4        , 0, 0            , 0, 0);
+	feh_set_kb("action_f5" , 0, XK_F5        , 0, 0            , 0, 0);
+	feh_set_kb("action_f6" , 0, XK_F6        , 0, 0            , 0, 0);
+	feh_set_kb("action_f7" , 0, XK_F7        , 0, 0            , 0, 0);
+	feh_set_kb("action_f8" , 0, XK_F8        , 0, 0            , 0, 0);
+	feh_set_kb("action_f9" , 0, XK_F9        , 0, 0            , 0, 0);
+	feh_set_kb("action_f10", 0, XK_F10       , 0, 0            , 0, 0);
+	feh_set_kb("action_f11", 0, XK_F11       , 0, 0            , 0, 0);
+	feh_set_kb("action_f12", 0, XK_F12       , 0, 0            , 0, 0);
 	feh_set_kb("zoom_in"   , 0, XK_Up        , 0, XK_KP_Add    , 0, 0);
 	feh_set_kb("zoom_out"  , 0, XK_Down      , 0, XK_KP_Subtract,0, 0);
 	feh_set_kb("zoom_default" , 0, XK_KP_Multiply, 0, XK_asterisk,0, 0);
@@ -600,6 +612,42 @@ void feh_event_handle_generic(winwidget winwid, unsigned int state, KeySym keysy
 	}
 	else if (feh_is_kp(EVENT_action_9, state, keysym, button)) {
 		feh_event_invoke_action(winwid, 9);
+	}
+	else if (feh_is_kp(EVENT_action_f1, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 11);
+	}
+	else if (feh_is_kp(EVENT_action_f2, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 12);
+	}
+	else if (feh_is_kp(EVENT_action_f3, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 13);
+	}
+	else if (feh_is_kp(EVENT_action_f4, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 14);
+	}
+	else if (feh_is_kp(EVENT_action_f5, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 15);
+	}
+	else if (feh_is_kp(EVENT_action_f6, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 16);
+	}
+	else if (feh_is_kp(EVENT_action_f7, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 17);
+	}
+	else if (feh_is_kp(EVENT_action_f8, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 18);
+	}
+	else if (feh_is_kp(EVENT_action_f9, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 19);
+	}
+	else if (feh_is_kp(EVENT_action_f10, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 20);
+	}
+	else if (feh_is_kp(EVENT_action_f11, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 21);
+	}
+	else if (feh_is_kp(EVENT_action_f12, state, keysym, button)) {
+		feh_event_invoke_action(winwid, 22);
 	}
 	else if (feh_is_kp(EVENT_zoom_in, state, keysym, button)) {
 		winwid->old_zoom = winwid->zoom;

@@ -1900,7 +1900,7 @@ void feh_draw_actions(winwidget w)
 	 * to be changed if the number of actions changes, but at least it doesn't
 	 * miss actions 2 to 9 if action1 isn't defined
 	 */
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 24; i++) {
 		if (opt.actions[i])
 			num_actions++;
 	}
@@ -1918,7 +1918,7 @@ void feh_draw_actions(winwidget w)
 /* Check for the widest line */
 	max_tw = tw;
 
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 24; i++) {
 		if (opt.actions[i]) {
 			line = emalloc(strlen(opt.action_titles[i]) + 5);
 			strcpy(line, "0: ");
@@ -1951,7 +1951,7 @@ void feh_draw_actions(winwidget w)
 	gib_imlib_text_draw(im, fn, NULL, 2, 2, "defined actions:", IMLIB_TEXT_TO_RIGHT, 0, 0, 0, 255);
 	gib_imlib_text_draw(im, fn, NULL, 1, 1, "defined actions:", IMLIB_TEXT_TO_RIGHT, 255, 255, 255, 255);
 
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < 24; i++) {
 		if (opt.action_titles[i]) {
 			cur_action++;
 			line = emalloc(strlen(opt.action_titles[i]) + 5);
