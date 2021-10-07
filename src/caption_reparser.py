@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import argparse, os, re;
+import argparse, os, re, textwrap;
 
 # a feh caption reparsing utility for use as an external command for quick caption block editing in feh
 # supports style, font, color changes through external feh commands
@@ -126,6 +126,20 @@ if(not last['found']):
         targetblock.insert(min(1, index), "#font:%s/%s\n" % (fonts[(fonts.index(last['font']) + eval("0%s" % args.new)) % len(fonts)], last['size']));
     elif(args.mode == "fontsize"):
         targetblock.insert(min(1, index), "#font:%s/%s\n" % (last['font'], (last['size'] + eval("0%s" % args.new))));
+    elif(args.mode == "resize"):
+        # isolate and size seperate elements
+        unreadable = [l for l in targetblock if (l[0] == '#' or ord(l[0]) > 0xFF)];
+        readable = [l.strip() for l in targetblock if (l[0] != '#' and ord(l[0]) <= 0xFF)];
+        width = max([len(l) for l in readable]);
+
+        # try to resize the readable text width until it wraps differently
+        while(width > 2 and width < 200):
+            width = eval("%s%s" % (width, args.new));
+            newreadable = textwrap.wrap(" ".join(readable), width=width, break_long_words=False) + [''];
+            if(newreadable != readable):
+                break;
+        # combine the elements back into the block
+        blocks[index] = unreadable + [l + "\n" for l in newreadable];
 
 if(args.debug):
     import pprint;
